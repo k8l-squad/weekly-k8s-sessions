@@ -1,0 +1,35 @@
+name: Container Image Build - Magic Buton
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Init vars
+        shell: bash
+        id: build_vars
+        # here we set the output variable, not printing it as it may seem
+        run: |
+          echo "SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT  
+
+      - name: Build the Magic Button Container Image
+        shell: bash
+        run: |
+          if [[ $BRANCH_NAME == "main" ]]; then
+            export DOCKER_IMAGE_TAG=latest
+          else
+            export DOCKER_IMAGE_TAG=${{ steps.vars.outputs.SHORT_SHA }}
+          fi
+          
+          docker build . --file Dockerfile.MagicButton \
+            --tag ghcr.io/k8l-squad/weekly-k8s-sessions/apps/magic-button:$DOCKER_IMAGE_TAG
