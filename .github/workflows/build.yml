@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/app/magic-button
+  IMAGE_NAME: ${{ github.repository }}/apps/magic-button
 
 jobs:
   build-and-push-image:
