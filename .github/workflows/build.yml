@@ -6,30 +6,52 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/app/magic-button
+
 jobs:
-
-  build:
-
+  build-and-push-image:
+    permissions:
+        contents: read
+        packages: write
+        attestations: write
+  
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
       
-      - name: Init vars
-        shell: bash
-        id: build_vars
-        # here we set the output variable, not printing it as it may seem
-        run: |
-          echo "SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT  
-
-      - name: Build the Magic Button Container Image
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+  
+      - name: Generate Vars
+        id: vars
         shell: bash
         run: |
           if [[ $BRANCH_NAME == "main" ]]; then
-            export DOCKER_IMAGE_TAG=latest
+            echo "IMAGE_TAG=latest" >> $GITHUB_OUTPUT
           else
-            export DOCKER_IMAGE_TAG=${{ steps.vars.outputs.SHORT_SHA }}
+            echo "IMAGE_TAG=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
           fi
-          
-          docker build . --file Dockerfile.MagicButton \
-            --tag ghcr.io/k8l-squad/weekly-k8s-sessions/apps/magic-button:$DOCKER_IMAGE_TAG
+      
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: .
+          file: ./Dockerfile.MagicButton
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}:${{ steps.vars.outputs.IMAGE_TAG }}
+
+
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
