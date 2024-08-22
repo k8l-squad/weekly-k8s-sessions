@@ -33,7 +33,7 @@ jobs:
         id: vars
         shell: bash
         run: |
-          if [[ $BRANCH_NAME == "main" ]]; then
+          if [[ ${{ github.head_ref || github.ref_name }} == "main" ]]; then
             echo "IMAGE_TAG=latest" >> $GITHUB_OUTPUT
           else
             echo "IMAGE_TAG=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
