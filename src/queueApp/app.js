@@ -1,4 +1,5 @@
 const { program, Option } = require("commander");
+const { consume } = require("./consumer");
 const { publish } = require("./publisher");
 
 const Redis = require("ioredis");
@@ -17,7 +18,7 @@ program.parse();
 const options = program.opts();
 
 if (options.consumer) {
-  console.log("IM A CONSUMER");
+  consume(redis);
 } else if (options.publisher) {
   publish(redis);
 } else {
