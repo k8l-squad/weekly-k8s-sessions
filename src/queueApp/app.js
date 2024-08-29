@@ -1,34 +1,18 @@
-const Redis = require("ioredis");
-const redis = new Redis();
+const { program, Option } = require("commander");
 
-async function main() {
-    const numbers = [1, 3, 5, 7, 9];
-    await redis.lpush("user-list", numbers);
+program
+  .addOption(new Option("-c, --consumer").conflicts("publisher"))
+  .addOption(new Option("-p, --publisher").conflicts("consumer"));
 
-    const popped = await redis.lpop("user-list");
-    console.log(popped); // 9
+program.parse();
 
-    const all = await redis.lrange("user-list", 0, -1);
-    console.log(all); // [ '7', '5', '3', '1' ]
+const options = program.opts();
 
-    const position = await redis.lpos("user-list", 5);
-    console.log(position); // 1
-
- await redis.blpop(() => {
-    setTimeout(() => {
-        // `redis` is in the block mode due to `redis.blpop()`,
-        // so we duplicate a new connection to invoke LPUSH command.
-        redis.duplicate().lpush("block-list", "hello");
-      }, 1200);
- })
-
- // two functions, one consumer one publisher
- // identify which mode we are in, consumer or publisher
- // always one consumer which will be in docker compose
- // 1 publisher, infinite amount of consumers
-
-  const blockPopped = await redis.blpop("block-list", 0); // Resolved after 1200ms.
-  console.log(blockPopped); // [ 'block-list', 'hello' ]
+if (options.consumer) {
+  console.log("IM A CONSUMER");
+} else if (options.publisher) {
+  console.log("IM a PUBLISHER");
+  return;
+} else {
+  console.log("YOU MESSED UP BADLY...");
 }
-
-main();
