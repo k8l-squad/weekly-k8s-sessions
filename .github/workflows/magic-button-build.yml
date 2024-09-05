@@ -1,0 +1,57 @@
+name: Container Image Build - Magic Buton
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - Dockerfile.magicButton
+      - src/magicButton/**
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - Dockerfile.magicButton
+      - src/magicButton/**
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/apps/magic-button
+
+jobs:
+  build-and-push-image:
+    permissions:
+        contents: read
+        packages: write
+        attestations: write
+  
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+  
+      - name: Generate Vars
+        id: vars
+        shell: bash
+        run: |
+          if [[ ${{ github.head_ref || github.ref_name }} == "main" ]]; then
+            echo "IMAGE_TAG=latest" >> $GITHUB_OUTPUT
+          else
+            echo "IMAGE_TAG=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: .
+          file: ./Dockerfile.magicButton
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}:${{ steps.vars.outputs.IMAGE_TAG }}
+
+

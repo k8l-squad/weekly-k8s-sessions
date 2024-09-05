@@ -34,4 +34,4 @@ override.tf.json
 terraform.rc
 
 # Ignore node modules!
-*/node_modules
+**/node_modules
