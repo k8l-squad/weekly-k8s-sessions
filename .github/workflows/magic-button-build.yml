@@ -2,10 +2,16 @@ name: Container Image Build - Magic Buton
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - "**"
+    paths:
+      - Dockerfile.magicButton
+      - src/magicButton/**
   pull_request:
     branches: [ "main" ]
-
+    paths:
+      - Dockerfile.magicButton
+      - src/magicButton/**
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/apps/magic-button
