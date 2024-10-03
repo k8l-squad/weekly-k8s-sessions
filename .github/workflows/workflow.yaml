@@ -1,0 +1,21 @@
+name: pick booger
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'target image tag for app'
+        required: false
+        default: latest
+        type: string
+  push:
+  
+jobs:
+  pick:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+    - name: ${{inputs.image_tag}}
+      uses: actions/checkout@v4
